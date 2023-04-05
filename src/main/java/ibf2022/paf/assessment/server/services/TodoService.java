@@ -14,6 +14,7 @@ import ibf2022.paf.assessment.server.repositories.TaskRepository;
 import ibf2022.paf.assessment.server.repositories.UserRepository;
 
 // TODO: Task 7
+
 @Service
 public class TodoService {
     @Autowired
@@ -23,29 +24,30 @@ public class TodoService {
     TaskRepository taskRepo;
 
     @Transactional
-    public boolean upsertTask(List<Task> tasks, String username) {
-        Optional<User> optionalUser = userRepo.findUserByUsername(username);
-        User user;
+public boolean upsertTask(List<Task> tasks, String username) {
+    Optional<User> optionalUser = userRepo.findUserByUsername(username);
 
-        if (optionalUser.isPresent()) {
-            user = optionalUser.get();
-        } else {
-            user = new User();
-            user.setUsername(username);
-            user.setName(username);
-            userRepo.insertUser(user);
-        }
-
-        for (Task task : tasks) {
-            task.setUser(user);
-            boolean success = taskRepo.insertTask(task);
-            if (!success) {
-                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-                return false;
-            }
-        }
-
-        return true;
+    User user;
+    if (optionalUser.isPresent()) {
+        user = optionalUser.get();
+    } else {
+        user = new User();
+        user.setUsername(username);
+        user.setName(username);
+        String userId = userRepo.insertUser(user);
+        user.setUserId(userId);
     }
+
+    for (Task task : tasks) {
+        task.setUser(user);
+        boolean success = taskRepo.insertTask(task);
+        if (!success) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return false;
+        }
+    }
+    return true;
+}
+
 
 }

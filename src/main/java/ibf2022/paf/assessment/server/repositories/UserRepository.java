@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -22,9 +23,13 @@ public class UserRepository {
     JdbcTemplate template;
 
     public Optional<User> findUserByUsername(String username) {
-        User user = template.queryForObject(FIND_USERBY_USERNAME_SQL, BeanPropertyRowMapper.newInstance(User.class),
-                username);
-        return Optional.ofNullable(user);
+        try {
+            User user = template.queryForObject(FIND_USERBY_USERNAME_SQL, BeanPropertyRowMapper.newInstance(User.class), username);
+            return Optional.ofNullable(user);
+        } catch (DataAccessException e) {
+            // handle the exception here
+            return Optional.empty();
+        }
     }
 
     public String insertUser(User user) {
